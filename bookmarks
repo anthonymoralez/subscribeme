@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+%w(rubygems mechanize).each {|r| require r}
+
+agent = WWW::Mechanize.new
+page = agent.get('https://www.google.com/bookmarks')
+puts page.forms.size
+form = page.forms.first
+form.continue = 'http://www.google.com/bookmarks/lookup?q=label:itunes&amp;output=xml'
+form.Email = "email@gmail.com"
+form.Passwd = "s3cr3t"
+
+page = agent.submit form
+page = page.meta.first.click
+puts page.body
