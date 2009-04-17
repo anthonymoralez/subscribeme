@@ -25,7 +25,11 @@ module GBoomarksApi
     def find(which)
       c = Connector.authenticate(@email, @passwd)
       bookmarks = c.all_bookmarks_as_xml
-      bookmarks.size > 200 ? [1] : []
+      bookmarks.xpath("//bookmark").map do |b|
+        title = b.xpath("title").first.content
+        url = b.xpath("url").first.content
+        Bookmark.new(title, url)
+      end
     end
   end
 
@@ -45,7 +49,7 @@ module GBoomarksApi
     end
 
     def create_bookmark(title, url)
-      page = @agent.get "#{BookmarksUrl}/mark?op=edit&output=popup&bkmk=http://api.rubyonrails.com&title=rails&label=itunes"
+      page = @agent.get "#{BookmarksUrl}/mark?op=edit&output=popup&bkmk=#{url}&title=#{title}&label=itunes"
       page = @agent.submit page.forms.first
     end
 
@@ -57,7 +61,8 @@ module GBoomarksApi
     end
 
     def all_bookmarks_as_xml
-      @agent.get("#{BookmarksUrl}/?output=xml").body
+      xml = @agent.get("#{BookmarksUrl}/?output=xml").body
+      Nokogiri::XML.parse(xml)
     end
   end
 end
