@@ -7,7 +7,7 @@ require 'gbookmark_api'
 # __create bookmark__
 # __destroy bookmark__
 # __create with labels__
-# finding all bookmarks with a given label
+# __finding all bookmarks with a given label__
 # no url
 # no title
 # no label
@@ -48,6 +48,16 @@ unit_tests do
     GBoomarksApi.create_bookmark("ruby", "http://www.ruby-lang.org/", "programming,ruby")
     bookmark = GBoomarksApi.find(:all).first
     assert_equal "programming,ruby", bookmark.labels
+  end
+
+  test 'find bookmarks by label' do
+    GBoomarksApi.create_bookmark("ruby", "http://www.ruby-lang.org/", "programming,ruby")
+    GBoomarksApi.create_bookmark("java", "http://java.sun.com/", "programming")
+
+    bookmarks = GBoomarksApi.find(:all, :label => 'ruby')
+
+    assert_equal 1, bookmarks.size 
+    assert_equal "ruby", bookmarks.first.title
   end
 
   def teardown

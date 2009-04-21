@@ -17,6 +17,7 @@ module GBoomarksApi
         @labels ||= @xml_node.xpath("labels/label").map { |l| l.content }.join(',')
     end
   end
+
   class << self
     attr_accessor :email, :passwd
 
@@ -35,9 +36,9 @@ module GBoomarksApi
       c.destroy_all
     end
 
-    def find(which)
+    def find(which, options={})
       c = Connector.authenticate(@email, @passwd)
-      bookmarks = c.all_bookmarks_as_xml
+      bookmarks = c.all_bookmarks_as_xml(options)
       bookmarks.xpath("//bookmark").map do |b|
         Bookmark.new(b)
       end
@@ -77,8 +78,10 @@ module GBoomarksApi
       @agent.submit form
     end
 
-    def all_bookmarks_as_xml
-      xml = @agent.get("#{BookmarksUrl}/?output=xml").body
+    def all_bookmarks_as_xml(options = {})
+      url = "#{BookmarksUrl}/?output=xml"
+      url << "&q=label:#{options[:label]}" unless options[:label].nil?
+      xml = @agent.get(url).body
       Nokogiri::XML.parse(xml)
     end
   end
