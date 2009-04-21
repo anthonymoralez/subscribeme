@@ -4,9 +4,14 @@ module GBoomarksApi
   BookmarksUrl = 'https://www.google.com/bookmarks'
   class Bookmark
     attr_accessor :title, :url
-    def initialize(title, url)
+    def initialize(title, url, raw_xml)
       @title = title
       @url = url
+      @raw_xml = raw_xml
+    end
+
+    def id
+        @id ||= @raw_xml.xpath("id").first.content 
     end
   end
   class << self
@@ -15,6 +20,11 @@ module GBoomarksApi
     def create_bookmark(title, url)
       c = Connector.authenticate(@email, @passwd)
       c.create_bookmark(title, url)
+    end
+
+    def destroy(bookmark)
+      c = Connector.authenticate(@email, @passwd)
+      c.destroy(bookmark)
     end
 
     def destroy_all
@@ -28,7 +38,7 @@ module GBoomarksApi
       bookmarks.xpath("//bookmark").map do |b|
         title = b.xpath("title").first.content
         url = b.xpath("url").first.content
-        Bookmark.new(title, url)
+        Bookmark.new(title, url, b)
       end
     end
   end
@@ -46,6 +56,12 @@ module GBoomarksApi
       form.Email = email
       form.Passwd = passwd
       agent.submit form
+    end
+
+    def destroy(bookmark)
+      page = agent.get(BookmarksUrl)
+      sig = page.forms.select { |f| !f["sig"].nil? }.first["sig"]
+      page = @agent.post "#{BookmarksUrl}/mark", 'dlq' => bookmark.id, "sig" => sig
     end
 
     def create_bookmark(title, url)

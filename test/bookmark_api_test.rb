@@ -5,7 +5,7 @@ require 'gbookmark_api'
 # TEST LIST
 # __destroy all bookmarks__
 # __create bookmark__
-# destroy bookmark
+# __destroy bookmark__
 # no url
 # no title
 # no label
@@ -33,6 +33,14 @@ unit_tests do
     bookmark = GBoomarksApi.find(:all).first
     assert_equal "ruby", bookmark.title
     assert_equal "http://www.ruby-lang.org/", bookmark.url
+  end
+
+  test 'bookmarks api should destroy a bookmark' do
+    GBoomarksApi.create_bookmark("java", "http://java.sun.com/")
+    bookmark = GBoomarksApi.find(:all).first
+
+    GBoomarksApi.destroy(bookmark)
+    assert_equal [], GBoomarksApi.find(:all)
   end
 
   def teardown
