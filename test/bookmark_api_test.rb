@@ -6,12 +6,13 @@ require 'gbookmark_api'
 # __destroy all bookmarks__
 # __create bookmark__
 # __destroy bookmark__
+# __create with labels__
+# finding all bookmarks with a given label
 # no url
 # no title
 # no label
-# finding all bookmarks with a given label
 # bookmark from xml
-#
+
 unit_tests do 
   def setup 
     $AUTH_INFO = YAML.load_file('test/bookmarks_api.yml')
@@ -41,6 +42,12 @@ unit_tests do
 
     GBoomarksApi.destroy(bookmark)
     assert_equal [], GBoomarksApi.find(:all)
+  end
+
+  test 'create bookmarks with labels' do
+    GBoomarksApi.create_bookmark("ruby", "http://www.ruby-lang.org/", "programming,ruby")
+    bookmark = GBoomarksApi.find(:all).first
+    assert_equal "programming,ruby", bookmark.labels
   end
 
   def teardown

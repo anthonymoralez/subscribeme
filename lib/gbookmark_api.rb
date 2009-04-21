@@ -4,22 +4,25 @@ module GBoomarksApi
   BookmarksUrl = 'https://www.google.com/bookmarks'
   class Bookmark
     attr_accessor :title, :url
-    def initialize(title, url, raw_xml)
-      @title = title
-      @url = url
-      @raw_xml = raw_xml
+    def initialize(xml_node)
+      @xml_node = xml_node
+      @title = @xml_node.xpath("title").first.content
+      @url = @xml_node.xpath("url").first.content
     end
 
     def id
-        @id ||= @raw_xml.xpath("id").first.content 
+        @id ||= @xml_node.xpath("id").first.content 
+    end
+    def labels
+        @labels ||= @xml_node.xpath("labels/label").map { |l| l.content }.join(',')
     end
   end
   class << self
     attr_accessor :email, :passwd
 
-    def create_bookmark(title, url)
+    def create_bookmark(title, url, labels="")
       c = Connector.authenticate(@email, @passwd)
-      c.create_bookmark(title, url)
+      c.create_bookmark(title, url, labels)
     end
 
     def destroy(bookmark)
@@ -36,9 +39,7 @@ module GBoomarksApi
       c = Connector.authenticate(@email, @passwd)
       bookmarks = c.all_bookmarks_as_xml
       bookmarks.xpath("//bookmark").map do |b|
-        title = b.xpath("title").first.content
-        url = b.xpath("url").first.content
-        Bookmark.new(title, url, b)
+        Bookmark.new(b)
       end
     end
   end
@@ -61,12 +62,12 @@ module GBoomarksApi
     def destroy(bookmark)
       page = agent.get(BookmarksUrl)
       sig = page.forms.select { |f| !f["sig"].nil? }.first["sig"]
-      page = @agent.post "#{BookmarksUrl}/mark", 'dlq' => bookmark.id, "sig" => sig
+      @agent.post "#{BookmarksUrl}/mark", 'dlq' => bookmark.id, "sig" => sig
     end
 
-    def create_bookmark(title, url)
-      page = @agent.get "#{BookmarksUrl}/mark?op=edit&output=popup&bkmk=#{url}&title=#{title}&label=itunes"
-      page = @agent.submit page.forms.first
+    def create_bookmark(title, url, labels="")
+      page = @agent.get "#{BookmarksUrl}/mark?op=edit&output=popup&bkmk=#{url}&title=#{URI.escape(title)}&labels=#{URI.escape(labels)}"
+      page =@agent.submit page.forms.first
     end
 
     def destroy_all
