@@ -36,7 +36,7 @@ module GBoomarksApi
       c.destroy_all
     end
 
-    def find(which, options={})
+    def find_all(options={})
       c = Connector.authenticate(@email, @passwd)
       bookmarks = c.all_bookmarks_as_xml(options)
       bookmarks.xpath("//bookmark").map do |b|
