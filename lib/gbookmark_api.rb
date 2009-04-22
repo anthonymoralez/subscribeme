@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'mechanize'
 
 module GBoomarksApi 
@@ -19,26 +20,25 @@ module GBoomarksApi
   end
 
   class << self
-    attr_accessor :email, :passwd
+    attr_accessor :email, :passwd 
+    def connector
+      @@connector ||= Connector.authenticate(@email, @passwd)
+    end
 
     def create_bookmark(title, url, labels="")
-      c = Connector.authenticate(@email, @passwd)
-      c.create_bookmark(title, url, labels)
+      self.connector.create_bookmark(title, url, labels)
     end
 
     def destroy(bookmark)
-      c = Connector.authenticate(@email, @passwd)
-      c.destroy(bookmark)
+      self.connector.destroy(bookmark)
     end
 
     def destroy_all
-      c = Connector.authenticate(@email, @passwd)
-      c.destroy_all
+      self.connector.destroy_all
     end
 
     def find_all(options={})
-      c = Connector.authenticate(@email, @passwd)
-      bookmarks = c.all_bookmarks_as_xml(options)
+      bookmarks = self.connector.all_bookmarks_as_xml(options)
       bookmarks.xpath("//bookmark").map do |b|
         Bookmark.new(b)
       end

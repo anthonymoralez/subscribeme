@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+
+require 'lib/gbookmark_api'
+require 'appscript'
+
+include Appscript
+
+$AUTH_INFO = YAML.load_file('~/.subscribe')
+GBoomarksApi.email = $AUTH_INFO['Email']
+GBoomarksApi.passwd = $AUTH_INFO['Passwd']
+
+itunes = app("iTunes")
+GBoomarksApi.find_all(:label => 'itunes').each do |bookmark|
+  puts bookmark.url
+  itunes.subscribe(bookmark.url)
+  GBoomarksApi.destroy(bookmark)
+end
